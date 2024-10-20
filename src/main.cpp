@@ -207,7 +207,10 @@ int main()
                 }
                 enemyPosition = enemy.enemyPos;
             }
-
+            if (enemyHP <= 0.0f)
+            {
+                !enemy.enemyEnabled;
+            }
 
         }
 
@@ -240,11 +243,7 @@ int main()
             }
         }
 
-        if (enemyHP <= 0.0f)
-        {
-            Enemy enemy;
-            enemy.enemyEnabled = false;
-        }
+ 
 
 
         enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
