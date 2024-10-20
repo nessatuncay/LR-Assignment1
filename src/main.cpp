@@ -6,6 +6,8 @@
 #include <vector>
 #include <algorithm>
 
+#define MAX_TURRETS 5
+
 const float SCREEN_SIZE = 800;
 
 const int TILE_COUNT = 20;
@@ -118,7 +120,9 @@ struct Enemy
 
 struct Turret
 {
-
+    Vector2 turretPosition{};
+    bool turretEnabled = true;
+    TileType TURRET; 
 };
 
 
@@ -154,7 +158,10 @@ int main()
     size_t next = curr + 1;
     size_t spawn = 0;
 
-    
+    //std::vector<Cell> turrets = FloodFill({ 0 , 12 }, tiles, TURRET); 
+    std::vector<Turret> turrets; 
+    const float turretRadius = 40.0f;
+    float turretCount = 0.0f;
 
     std::vector<Enemy> enemies;
     const float enemySpeed = 250.0f;
@@ -242,6 +249,26 @@ int main()
             [&bullets](Bullet bullet) {
                 return !bullet.enabled;
             }), bullets.end());
+
+
+        // Turret creation
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            if (turretCount <= 5.0f)
+            {
+                turretCount = turretCount + 1.0f; 
+                for (int row = 0; row < TILE_COUNT; row++)
+                {
+                    for (int col = 0; col < TILE_COUNT; col++)
+                    {
+                        DrawTile(row, col, tiles[row][col]); 
+                    }
+                }
+            }
+        }
+
+
+
 
         BeginDrawing();
         ClearBackground(BLACK);
