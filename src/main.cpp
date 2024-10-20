@@ -16,6 +16,7 @@ enum TileType : int
     GRASS,      // Marks unoccupied space, can be overwritten 
     DIRT,       // Marks the path, cannot be overwritten
     WAYPOINT,   // Marks where the path turns, cannot be overwritten
+    TURRET,
     COUNT
 };
 
@@ -115,6 +116,12 @@ struct Enemy
     bool enemyEnabled = true;
 };
 
+struct Turret
+{
+
+};
+
+
 int main()
 {
     int tiles[TILE_COUNT][TILE_COUNT]
@@ -147,6 +154,7 @@ int main()
     size_t next = curr + 1;
     size_t spawn = 0;
 
+    
 
     std::vector<Enemy> enemies;
     const float enemySpeed = 250.0f;
