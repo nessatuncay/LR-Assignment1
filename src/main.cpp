@@ -106,9 +106,11 @@ struct Bullet
     bool enabled = true;
 };
 
+// I needed to make 3 unique position variables to get this to make enemies oh my god
 struct Enemy
 {
     Vector2 enemyInitPos{};
+    Vector2 enemyPos{};
     Vector2 enemyDirection{};
     bool enemyEnabled = true;
 };
@@ -175,10 +177,14 @@ int main()
         enemyTime += dt;
         if( enemyCount <= 9.0f && enemyTime >= enemySpawn)
         {
+            enemyTime = 0;
+
             Enemy enemy; 
-            enemy.enemyInitPos = TileCenter(waypoints[curr].row, waypoints[curr].col);
+            enemy.enemyInitPos = TileCenter(waypoints[spawn].row, waypoints[spawn].col);
             enemyCount += 1.0f;
+            enemy.enemyPos = enemy.enemyInitPos;
             enemies.push_back(enemy);
+
         }
 
         for (Enemy& enemy : enemies)
@@ -188,14 +194,15 @@ int main()
                 Vector2 from = TileCenter(waypoints[curr].row, waypoints[curr].col);
                 Vector2 to = TileCenter(waypoints[next].row, waypoints[next].col);
                 enemy.enemyDirection = Normalize(to - from);
-                enemyPosition = enemy.enemyInitPos + enemy.enemyDirection * enemySpeed * dt;
-                if (CheckCollisionPointCircle(enemyPosition, to, enemyRadius))
+                enemy.enemyPos = enemy.enemyPos + enemy.enemyDirection * enemySpeed * dt;
+                if (CheckCollisionPointCircle(enemy.enemyPos, to, enemyRadius))
                 {
                     curr++;
                     next++;
                     atEnd = next == waypoints.size();
-                    enemyPosition = TileCenter(waypoints[curr].row, waypoints[curr].col);
-                } 
+                    enemy.enemyPos = TileCenter(waypoints[curr].row, waypoints[curr].col);
+                }
+                enemyPosition = enemy.enemyPos;
             }
         }
 
@@ -238,7 +245,7 @@ int main()
             }
         }
         for (const Enemy& enemy : enemies)
-            DrawCircleV(enemyPosition, enemyRadius, RED);
+            DrawCircleV(enemy.enemyPos, enemyRadius, RED);
 
         // Render bullets
         for (const Bullet& bullet : bullets)
