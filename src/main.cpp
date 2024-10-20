@@ -1,5 +1,6 @@
 #include <raylib.h>
 #include "Math.h"
+#include "raudio.c"
 
 #include <cassert>
 #include <array>
@@ -140,7 +141,7 @@ int main()
             { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 }, // 6
             { 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0 }, // 7
             { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 8
-            { 0, 0, 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 9
+            { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 9
             { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 10
             { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 11
             { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 12
@@ -161,8 +162,7 @@ int main()
     Turret turret;
     turret.type = TURRET;  
     std::vector<Turret> turrets;
-    //std::vector<Cell> turrets = FloodFill({ 0, 9 }, tiles, TURRET); 
-    const float turretRadius = 40.0f;
+    const float turretRadius = 20.0f;
     float turretCount = 0.0f;
     Vector2 turretPosition{};
     
@@ -265,12 +265,22 @@ int main()
                 turretCount = turretCount + 1.0f;
                 Vector2 mousePosition = GetMousePosition();
                 turretPosition = mousePosition;
+                
             }
             else 
             {
                 DrawText(TextFormat("You cannot make any more turrets"), 10, 10, 20, PINK);
             }
         }
+        
+        //turret deletion
+        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+        {
+            Turret turret;
+            turretCount = turretCount - 1.0f;
+            
+        }
+        
 
 
 
@@ -286,6 +296,9 @@ int main()
         }
         for (const Enemy& enemy : enemies)
             DrawCircleV(enemy.enemyPos, enemyRadius, RED);
+
+        for (const Turret& turret : turrets) 
+            DrawCircleV(turret.turretPos, turretRadius, PINK);  
 
         // Render bullets
         for (const Bullet& bullet : bullets)
