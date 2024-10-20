@@ -120,9 +120,9 @@ struct Enemy
 
 struct Turret
 {
-    Vector2 turretPosition{};
+    Vector2 turretPos{};
     bool turretEnabled = true;
-    TileType TURRET; 
+    TileType type;
 };
 
 
@@ -140,7 +140,7 @@ int main()
             { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 }, // 6
             { 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 0, 0 }, // 7
             { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 8
-            { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 9
+            { 0, 0, 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 9
             { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 10
             { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 11
             { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, // 12
@@ -158,10 +158,14 @@ int main()
     size_t next = curr + 1;
     size_t spawn = 0;
 
-    //std::vector<Cell> turrets = FloodFill({ 0 , 12 }, tiles, TURRET); 
-    std::vector<Turret> turrets; 
+    Turret turret;
+    turret.type = TURRET;  
+    std::vector<Turret> turrets;
+    //std::vector<Cell> turrets = FloodFill({ 0, 9 }, tiles, TURRET); 
     const float turretRadius = 40.0f;
     float turretCount = 0.0f;
+    Vector2 turretPosition{};
+    
 
     std::vector<Enemy> enemies;
     const float enemySpeed = 250.0f;
@@ -227,8 +231,9 @@ int main()
         {
             shootCurrent = 0.0f;
 
+            Turret turret;
             Bullet bullet;
-            bullet.position = GetMousePosition();
+            bullet.position = turretPosition;
             bullet.direction = Normalize(enemyPosition - bullet.position);
             bullets.push_back(bullet);
         }
@@ -236,7 +241,7 @@ int main()
         // Bullet update
         for (Bullet& bullet : bullets)
         {
-            bullet.position = bullet.position + bullet.direction * bulletSpeed * dt;
+            bullet.position = bullet.position + bullet.direction * bulletSpeed * dt; 
             bullet.time += dt;
 
             bool expired = bullet.time >= bulletTime;
@@ -245,10 +250,10 @@ int main()
         }
 
         // Bullet removal
-        bullets.erase(std::remove_if(bullets.begin(), bullets.end(),
-            [&bullets](Bullet bullet) {
-                return !bullet.enabled;
-            }), bullets.end());
+        bullets.erase(std::remove_if(bullets.begin(), bullets.end(), 
+            [&bullets](Bullet bullet) { 
+                return !bullet.enabled; 
+            }), bullets.end()); 
 
 
         // Turret creation
@@ -256,14 +261,14 @@ int main()
         {
             if (turretCount <= 5.0f)
             {
-                turretCount = turretCount + 1.0f; 
-                for (int row = 0; row < TILE_COUNT; row++)
-                {
-                    for (int col = 0; col < TILE_COUNT; col++)
-                    {
-                        DrawTile(row, col, tiles[row][col]); 
-                    }
-                }
+                Turret turret;
+                turretCount = turretCount + 1.0f;
+                Vector2 mousePosition = GetMousePosition();
+                turretPosition = mousePosition;
+            }
+            else 
+            {
+                DrawText(TextFormat("You cannot make any more turrets"), 10, 10, 20, PINK);
             }
         }
 
