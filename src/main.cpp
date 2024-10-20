@@ -113,6 +113,7 @@ struct Enemy
     Vector2 enemyPos{};
     Vector2 enemyDirection{};
     bool enemyEnabled = true;
+
 };
 
 int main()
@@ -156,6 +157,7 @@ int main()
     float enemyTime = 0.0f;
     float enemySpawn = 1.0f;
     bool atEnd = false;
+    float enemyHP = 0.0f;
 ; 
 
     const float bulletTime = 1.0f;
@@ -180,6 +182,7 @@ int main()
             enemyTime = 0;
 
             Enemy enemy; 
+            enemyHP == 2.0f;
             enemy.enemyInitPos = TileCenter(waypoints[spawn].row, waypoints[spawn].col);
             enemyCount += 1.0f;
             enemy.enemyPos = enemy.enemyInitPos;
@@ -204,6 +207,8 @@ int main()
                 }
                 enemyPosition = enemy.enemyPos;
             }
+
+
         }
 
         // Shooting
@@ -226,8 +231,28 @@ int main()
 
             bool expired = bullet.time >= bulletTime;
             bool collision = CheckCollisionCircles(enemyPosition, enemyRadius, bullet.position, bulletRadius);
+
+
             bullet.enabled = !expired && !collision;
+            if ( !collision )
+            {
+                enemyHP -= 1.0f;
+            }
         }
+
+        if (enemyHP <= 0.0f)
+        {
+            Enemy enemy;
+            enemy.enemyEnabled = false;
+        }
+
+
+        enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
+            [&enemies](Enemy enemy)
+            {
+                return !enemy.enemyEnabled;
+            }
+        ), enemies.end());
 
         // Bullet removal
         bullets.erase(std::remove_if(bullets.begin(), bullets.end(),
