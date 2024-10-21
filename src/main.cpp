@@ -119,6 +119,22 @@ struct Bullet
     bool enabled = true;
 };
 
+struct Grenade
+{
+    Vector2 position{};
+    Vector2 direction{};
+    float time = 0.0f;
+    bool enabled = true;
+};
+
+struct Missile
+{
+    Vector2 position{};
+    Vector2 direction{};
+    float time = 0.0f;
+    bool enabled = true;
+};
+
 // I needed to make 3 unique position variables to get this to make enemies oh my god
 struct Enemy
 {
@@ -128,6 +144,23 @@ struct Enemy
     bool enemyEnabled = true;
 
 };
+
+struct Zombie
+{
+    Vector2 zombieInitPos{};
+    Vector2 zombiePos{};
+    Vector2 zombieDirection{};
+    bool zombieEnabled = true;
+};
+
+struct Vampire
+{
+    Vector2 vampireInitPos{};
+    Vector2 vampirePos{};
+    Vector2 vampireDirection{};
+    bool vampireEnabled = true;
+};
+
 
 struct Turret
 {
@@ -169,6 +202,7 @@ int main()
     size_t next = curr + 1;
     size_t spawn = 0;
 
+    //turret info
     Turret turret;
     turret.type = TURRET;
     std::vector<Turret> turrets;
@@ -177,7 +211,7 @@ int main()
     Vector2 turretPosition{}; 
 
 
-
+    //enemy info
     std::vector<Enemy> enemies;
     const float enemySpeed = 250.0f;
     const float enemyRadius = 20.0f;
@@ -187,8 +221,36 @@ int main()
     float enemySpawn = 1.0f;
     bool atEnd = false;
     float enemyHP = 0.0f;
-; 
+    ;
 
+    //zombie info
+    std::vector<Zombie> zombies;
+    const float zombieSpeed = 30.0f;
+    const float zombieRadius = 40.0f;
+    float zombieCount = 0.0f;
+    Vector2 zombiePosition{};
+    float zombieTime = 0.0f;
+    float zombieSpawn = 1.0f;
+    bool atEndZombie = false; 
+    float zombieHP = 20.0f;
+    ;
+
+
+
+    //vampire info
+    std::vector<Vampire> vampires;
+    const float vampireSpeed = 300.0f;
+    const float vampireRadius = 5.0f;
+    float vampireCount = 0.0f;
+    Vector2 vampirePosition{}; 
+    float vampireTime = 0.0f; 
+    float vampireSpawn = 5.0f; 
+    bool atEndVampire = false; 
+    float vampireHP = 30.0f; 
+    ;
+
+
+    //bullet info
     const float bulletTime = 1.0f;
     const float bulletSpeed = 500.0f;
     const float bulletRadius = 15.0f;
@@ -197,6 +259,27 @@ int main()
     float shootCurrent = 0.0f;
     float shootTotal = 0.25f;
 
+    //grenade info
+    const float grenadeTime = 1.0f; 
+    const float grenadeSpeed = 300.0f; 
+    const float grenadeRadius = 40.0f;
+
+    std::vector<Grenade> grenades; 
+    float throwCurrent = 0.0f; 
+    float throwTotal = 0.25f;
+
+
+    //missile info
+    const float missileTime = 1.0f; 
+    const float missileSpeed = 800.0f; 
+    const float missileRadius = 35.0f; 
+
+    std::vector<Missile> missiles;
+    float launchCurrent = 0.0f; 
+    float launchTotal = 0.25f; 
+
+
+    //audio info
     InitAudioDevice(); 
     Sound sound1 = LoadSound("bullet.sound.mp3"); 
     Sound sound2 = LoadSound("turret.create.mp3"); 
@@ -266,6 +349,36 @@ int main()
             PlaySound(sound1); 
         }
 
+        //launching
+        launchCurrent += dt;
+        if (launchCurrent >= launchTotal)
+        {
+            launchCurrent = 0.0f;
+
+            Missile missile; 
+            Turret turret;
+            missile.position = turretPosition;
+            missile.direction = Normalize(zombiePosition - missile.position);
+            missiles.push_back(missile); 
+            PlaySound(sound1);
+        }
+
+
+        //throwing
+        throwCurrent += dt;
+        if (throwCurrent >= throwTotal)
+        {
+            throwCurrent = 0.0f;
+
+            Grenade grenade;
+            Turret turret;
+            grenade.position = turretPosition;
+            grenade.direction = Normalize(vampirePosition - grenade.position);
+            grenades.push_back(grenade);
+            PlaySound(sound1);
+        }
+
+
         // Bullet update
         for (Bullet& bullet : bullets)
         {
@@ -281,24 +394,87 @@ int main()
             {
                 enemyHP = enemyHP - 1.0f;
                 PlaySound(sound4);
+                if (enemyHP <= 0.0f)
+                {
+                    PlaySound(sound5);
+                    enemies.end(); 
+                }
+            }
+        }
+
+        //Missile Update
+        for (Missile& missile : missiles)
+        {
+            missile.position = missile.position + missile.direction * missileSpeed * dt;
+            missile.time += dt;
+
+            bool expired = missile.time >= missileTime;
+            bool collision = CheckCollisionCircles(zombiePosition, zombieRadius, missile.position, missileRadius);
+
+
+            missile.enabled = !expired && !collision;
+            if (collision)
+            {
+                zombieHP = zombieHP - 1.0f; 
+                PlaySound(sound4);
+                if (zombieHP <= 0.0f)
+                {
+                    PlaySound(sound5);
+                    zombies.end();
+                }
+            }
+        }
+
+
+        //Grenade Update
+        for (Grenade& grenade : grenades)
+        {
+            grenade.position = grenade.position + grenade.direction * grenadeSpeed * dt;
+            grenade.time += dt;
+
+            bool expired = grenade.time >= grenadeTime;
+            bool collision = CheckCollisionCircles(vampirePosition, vampireRadius, grenade.position, grenadeRadius);
+
+
+            grenade.enabled = !expired && !collision;
+            if (collision)
+            {
+                vampireHP = vampireHP - 1.0f;
+                PlaySound(sound4);
+                if (vampireHP <= 0.0f)
+                {
+                    PlaySound(sound5);
+                    vampires.end(); 
+                }
             }
         }
 
  
-
-
-        enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
-            [&enemies](Enemy enemy)
-            {
-                return !enemy.enemyEnabled;
-            }
-        ), enemies.end());
+        //enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
+        //    [&enemies](Enemy enemy)
+        //    {
+        //        return !enemy.enemyEnabled;
+        //    }), enemies.end());
 
         // Bullet removal
         bullets.erase(std::remove_if(bullets.begin(), bullets.end(),
             [&bullets](Bullet bullet) {
                 return !bullet.enabled;
             }), bullets.end());
+
+        //missile removal
+        missiles.erase(std::remove_if(missiles.begin(), missiles.end(),
+            [&missiles](Missile missile) {
+                return !missile.enabled;
+            }), missiles.end());
+
+
+        //grenade removal
+        grenades.erase(std::remove_if(grenades.begin(), grenades.end(),
+            [&grenades](Grenade grenade) { 
+                return !grenade.enabled;
+            }), grenades.end());
+
 
         // Turret creation
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
@@ -313,7 +489,6 @@ int main()
                 {
                     PlaySound(sound2);
                 }
-
 
             }
             else
@@ -345,9 +520,19 @@ int main()
                 DrawTile(row, col, tiles[row][col]);
             }
         }
+        //enemy draw
         for (const Enemy& enemy : enemies)
             DrawCircleV(enemy.enemyPos, enemyRadius, RED);
 
+        //zombie draw
+        for (const Zombie& zombie : zombies)
+            DrawCircleV(zombie.zombiePos, zombieRadius, PURPLE); 
+
+        //vampire draw
+        for (const Vampire& vampire : vampires)
+            DrawCircleV(vampire.vampirePos, vampireRadius, ORANGE); 
+
+        //turret draw
         for (const Turret& turret : turrets)
             DrawCircleV(turretPosition, turretRadius, PINK);  
 
@@ -355,6 +540,17 @@ int main()
         for (const Bullet& bullet : bullets)
             DrawCircleV(bullet.position, bulletRadius, BLUE); 
         DrawText(TextFormat("Total bullets: %i", bullets.size()), 10, 10, 20, BLUE);
+
+        //render missiles
+        for (const Missile& missile : missiles)
+            DrawCircleV(missile.position, missileRadius, YELLOW); 
+        DrawText(TextFormat("Total missiles: %i", missiles.size()), 10, 25, 20, BLUE);
+
+
+        //render grenades
+        for (const Grenade& grenade : grenades)
+            DrawCircleV(grenade.position, grenadeRadius, MAROON); 
+        DrawText(TextFormat("Total grenades: %i", grenades.size()), 10, 35, 20, BLUE);
 
         EndDrawing();
     }
