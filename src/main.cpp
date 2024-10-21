@@ -185,6 +185,16 @@ int main()
     float shootCurrent = 0.0f;
     float shootTotal = 0.25f;
 
+
+    InitAudioDevice();
+    Sound sound1 = LoadSound("bullet.sound.mp3");  
+    Sound sound2 = LoadSound("turret.create.mp3");
+    Sound sound3 = LoadSound("turret.delete.mp3");
+    Sound sound4 = LoadSound("enemy.hit.mp3");
+    Sound sound5 = LoadSound("enemy.death.mp3");
+
+
+
     InitWindow(SCREEN_SIZE, SCREEN_SIZE, "Tower Defense");
     SetTargetFPS(60);
     while (!WindowShouldClose())
@@ -236,6 +246,7 @@ int main()
             bullet.position = turretPosition;
             bullet.direction = Normalize(enemyPosition - bullet.position);
             bullets.push_back(bullet);
+            PlaySound(sound1);
         }
 
         // Bullet update
@@ -247,6 +258,10 @@ int main()
             bool expired = bullet.time >= bulletTime;
             bool collision = CheckCollisionCircles(enemyPosition, enemyRadius, bullet.position, bulletRadius);
             bullet.enabled = !expired && !collision;
+            if (collision)
+            {
+                PlaySound(sound4); 
+            }
         }
 
         // Bullet removal
@@ -265,6 +280,10 @@ int main()
                 turretCount = turretCount + 1.0f;
                 Vector2 mousePosition = GetMousePosition();
                 turretPosition = mousePosition;
+                if (turretCount + 1.0f)
+                {
+                    PlaySound(sound2);
+                }
                 
             }
             else 
@@ -278,7 +297,10 @@ int main()
         {
             Turret turret;
             turretCount = turretCount - 1.0f;
-            
+            if (turretCount - 1.0f)
+            {
+                PlaySound(sound3);
+            }
         }
         
 
@@ -308,5 +330,6 @@ int main()
         EndDrawing();
     }
     CloseWindow();
+    CloseAudioDevice();
     return 0;
 }
