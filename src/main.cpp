@@ -1,5 +1,6 @@
 #include <raylib.h>
 #include "Math.h"
+#include "raudio.c"
 
 #include <cassert>
 #include <array>
@@ -11,14 +12,14 @@ const float SCREEN_SIZE = 800;
 const int TILE_COUNT = 20;
 const float TILE_SIZE = SCREEN_SIZE / TILE_COUNT;
 
-Texture2D bullettex = LoadTexture("Bullet.png");
+//Texture2D bullettex = LoadTexture("Bullet.png");
 
-int frameWidth = bullettex.width;
-int frameHeight = bullettex.height;
+//int frameWidth = bullettex.width;
+//int frameHeight = bullettex.height;
 
-Rectangle sourceRec = { 0.0f, 0.0f, frameWidth, frameHeight };
+//Rectangle sourceRec = { 0.0f, 0.0f, frameWidth, frameHeight };
 
-Vector2 origin = { frameWidth, frameHeight };
+//Vector2 origin = { frameWidth, frameHeight };
 
 int rotation = 0;
 
@@ -27,6 +28,7 @@ enum TileType : int
     GRASS,      // Marks unoccupied space, can be overwritten 
     DIRT,       // Marks the path, cannot be overwritten
     WAYPOINT,   // Marks where the path turns, cannot be overwritten
+    TURRET,
     COUNT
 };
 
@@ -127,6 +129,14 @@ struct Enemy
 
 };
 
+struct Turret
+{
+    Vector2 turretPos{};
+    bool turretEnabled = true;
+    TileType type;
+};
+
+
 int main()
 {
     int tiles[TILE_COUNT][TILE_COUNT]
@@ -159,6 +169,14 @@ int main()
     size_t next = curr + 1;
     size_t spawn = 0;
 
+    Turret turret;
+    turret.type = TURRET;
+    std::vector<Turret> turrets;
+    const float turretRadius = 20.0f;
+    float turretCount = 0.0f;
+    Vector2 turretPosition{}; 
+
+
 
     std::vector<Enemy> enemies;
     const float enemySpeed = 250.0f;
@@ -178,6 +196,15 @@ int main()
     std::vector<Bullet> bullets;
     float shootCurrent = 0.0f;
     float shootTotal = 0.25f;
+
+    InitAudioDevice(); 
+    Sound sound1 = LoadSound("bullet.sound.mp3"); 
+    Sound sound2 = LoadSound("turret.create.mp3"); 
+    Sound sound3 = LoadSound("turret.delete.mp3"); 
+    Sound sound4 = LoadSound("enemy.hit.mp3"); 
+    Sound sound5 = LoadSound("enemy.death.mp3"); 
+
+
 
     InitWindow(SCREEN_SIZE, SCREEN_SIZE, "Tower Defense");
     SetTargetFPS(60);
@@ -232,9 +259,11 @@ int main()
             shootCurrent = 0.0f;
 
             Bullet bullet;
-            bullet.position = GetMousePosition();
+            Turret turret;
+            bullet.position = turretPosition; 
             bullet.direction = Normalize(enemyPosition - bullet.position);
             bullets.push_back(bullet);
+            PlaySound(sound1); 
         }
 
         // Bullet update
@@ -248,9 +277,10 @@ int main()
 
 
             bullet.enabled = !expired && !collision;
-            if ( !collision )
+            if ( collision )
             {
-                enemyHP -= 1.0f;
+                enemyHP = enemyHP - 1.0f;
+                PlaySound(sound4);
             }
         }
 
@@ -270,6 +300,42 @@ int main()
                 return !bullet.enabled;
             }), bullets.end());
 
+        // Turret creation
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            if (turretCount <= 5.0f)
+            {
+                Turret turret;
+                turretCount = turretCount + 1.0f;
+                Vector2 mousePosition = GetMousePosition();
+                turretPosition = mousePosition;
+                if (turretCount + 1.0f)
+                {
+                    PlaySound(sound2);
+                }
+
+
+            }
+            else
+            {
+                DrawText(TextFormat("You cannot make any more turrets"), 10, 10, 20, PINK);
+            }
+        }
+
+        //turret deletion
+        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+        {
+            Turret turret;
+            turretCount = turretCount - 1.0f;
+            if (turretCount - 1.0f)
+            {
+                PlaySound(sound3);
+            }
+        }
+
+
+
+
         BeginDrawing();
         ClearBackground(BLACK);
         for (int row = 0; row < TILE_COUNT; row++)
@@ -282,13 +348,17 @@ int main()
         for (const Enemy& enemy : enemies)
             DrawCircleV(enemy.enemyPos, enemyRadius, RED);
 
+        for (const Turret& turret : turrets)
+            DrawCircleV(turretPosition, turretRadius, PINK);  
+
         // Render bullets
         for (const Bullet& bullet : bullets)
-            DrawTexturePro( bullettex, sourceRec, , origin, rotation, BLUE);
+            DrawCircleV(bullet.position, bulletRadius, BLUE); 
         DrawText(TextFormat("Total bullets: %i", bullets.size()), 10, 10, 20, BLUE);
 
         EndDrawing();
     }
     CloseWindow();
+    CloseAudioDevice();
     return 0;
 }
