@@ -11,6 +11,17 @@ const float SCREEN_SIZE = 800;
 const int TILE_COUNT = 20;
 const float TILE_SIZE = SCREEN_SIZE / TILE_COUNT;
 
+Texture2D bullettex = LoadTexture("Bullet.png");
+
+int frameWidth = bullettex.width;
+int frameHeight = bullettex.height;
+
+Rectangle sourceRec = { 0.0f, 0.0f, frameWidth, frameHeight };
+
+Vector2 origin = { frameWidth, frameHeight };
+
+int rotation = 0;
+
 enum TileType : int
 {
     GRASS,      // Marks unoccupied space, can be overwritten 
@@ -273,7 +284,7 @@ int main()
 
         // Render bullets
         for (const Bullet& bullet : bullets)
-            DrawCircleV(bullet.position, bulletRadius, BLUE);
+            DrawTexturePro( bullettex, sourceRec, , origin, rotation, BLUE);
         DrawText(TextFormat("Total bullets: %i", bullets.size()), 10, 10, 20, BLUE);
 
         EndDrawing();
